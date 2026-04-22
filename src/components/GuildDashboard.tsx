@@ -66,7 +66,7 @@ export default function GuildDashboard() {
   const goalTarget = 50;
   const progressRatio = totalCompleted / goalTarget;
 
-  const currentSettings = guild || { name: 'The Night Owls', icon: 'users', color: 'bg-rpg-surface', fontSize: 'text-4xl', fontColor: '' };
+  const currentSettings = guild || { name: 'The Night Owls', icon: 'users', color: 'bg-rpg-surface', fontSize: 'text-4xl', fontColor: '', events: [] };
   const bannerColorStyle = COLORS.find(c => c.id === currentSettings.color)?.render || 'bg-rpg-surface text-rpg-text';
 
   const [bannerDraft, setBannerDraft] = useState(currentSettings);
