@@ -16,6 +16,17 @@ export const schema = appSchema({
       ],
     }),
     tableSchema({
+      name: 'user_settings',
+      columns: [
+        { name: 'user_id', type: 'string', isIndexed: true },
+        { name: 'chronotype', type: 'string' }, // EarlyBird, NightOwl, Polyphasic
+        { name: 'peak_start_minute', type: 'number' }, // e.g. 480 (08:00)
+        { name: 'peak_end_minute', type: 'number' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ],
+    }),
+    tableSchema({
       name: 'pillars',
       columns: [
         { name: 'name', type: 'string' },
@@ -26,12 +37,29 @@ export const schema = appSchema({
       ],
     }),
     tableSchema({
+      name: 'habit_stacks',
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'peak_start_minute', type: 'number', isOptional: true },
+        { name: 'peak_end_minute', type: 'number', isOptional: true },
+        { name: 'multiplier_streak', type: 'number' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ],
+    }),
+    tableSchema({
       name: 'habits',
       columns: [
         { name: 'pillar_id', type: 'string', isIndexed: true },
+        { name: 'stack_id', type: 'string', isIndexed: true, isOptional: true },
+        { name: 'trigger_habit_id', type: 'string', isIndexed: true, isOptional: true },
         { name: 'title', type: 'string' },
         { name: 'routine', type: 'string' },
+        { name: 'peak_start_minute', type: 'number', isOptional: true },
+        { name: 'peak_end_minute', type: 'number', isOptional: true },
         { name: 'base_xp', type: 'number' },
+        { name: 'failure_count_14d', type: 'number' },
+        { name: 'retirement_reason', type: 'string', isOptional: true },
         { name: 'is_archived', type: 'boolean' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },

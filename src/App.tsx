@@ -10,19 +10,6 @@ import { triggerHaptic } from '@/src/lib/utils';
 export default function App() {
   const { appMode, setAppMode, stats } = useAppStore();
 
-  useEffect(() => {
-    // Apply body class for theme transitions
-    document.body.classList.remove('rpg-mode', 'theme-midnight', 'theme-emerald');
-    
-    if (appMode === 'rpg' || appMode === 'guild') {
-      document.body.classList.add('rpg-mode');
-    }
-    
-    if (stats.activeTheme === 'midnight') document.body.classList.add('theme-midnight');
-    if (stats.activeTheme === 'emerald') document.body.classList.add('theme-emerald');
-    
-  }, [appMode, stats.activeTheme]);
-
   const handleModeChange = (mode: 'focus' | 'rpg' | 'guild') => {
     if (appMode !== mode) {
       triggerHaptic('heavy');
@@ -31,7 +18,7 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen relative overflow-x-hidden transition-colors duration-1000 ${stats.activeTheme === 'midnight' ? 'bg-[#121212]' : stats.activeTheme === 'emerald' ? 'bg-[#0A1A12]' : 'bg-[#FDFCF8]'}`}>
+    <div className="min-h-screen relative overflow-x-hidden transition-colors duration-1000 bg-background text-foreground">
       <AnimatePresence mode="wait">
         {appMode === 'focus' ? (
           <motion.div

@@ -7,6 +7,7 @@ import { schema } from './schema';
 import { User } from './models/User';
 import { Pillar } from './models/Pillar';
 import { Habit } from './models/Habit';
+import { HabitStack } from './models/HabitStack';
 import { Task } from './models/Task';
 import { Log } from './models/Log';
 import { GuildEvent } from './models/GuildEvent';
@@ -26,6 +27,7 @@ export const database = new Database({
     User,
     Pillar,
     Habit,
+    HabitStack,
     Task,
     Log,
     GuildEvent,

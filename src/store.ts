@@ -13,6 +13,7 @@ export interface Habit {
   resourceReward: ResourceType;
   baseXp: number;
   routine: RoutineType;
+  triggerHabitId?: string; // Stacking logic link
 }
 
 export interface UserStats {
@@ -52,7 +53,7 @@ interface AppState {
   
   toggleAppMode: () => void;
   addHabit: (title: string, resourceReward: ResourceType, routine: RoutineType) => void;
-  toggleHabitCompletion: (id: string, date: string) => void;
+  toggleHabitCompletion: (id: string, date: string) => (() => void) | void;
   repairStreak: (habitId: string, missingDate: string) => void;
   gainXp: (amount: number, reason?: string) => void;
   buyPhoenixCharge: () => void;
@@ -158,6 +159,8 @@ export const useAppStore = create<AppState>()(
       })),
 
       toggleHabitCompletion: (id, date) => {
+        let softNudgeCallback: (() => void) | void = undefined;
+
         set((state) => {
           const habit = state.habits.find(h => h.id === id);
           if (!habit) return state;
@@ -171,8 +174,6 @@ export const useAppStore = create<AppState>()(
             newHabits = state.habits.map(h => 
               h.id === id ? { ...h, completions: h.completions.filter(c => c !== date) } : h
             );
-            // We don't revert XP to prevent XP farming exploits by toggling, 
-            // but in a strict system we might. Emphasizing positive reinforcement for now.
           } else {
             // Add completion
             newHabits = state.habits.map(h => 
@@ -191,11 +192,23 @@ export const useAppStore = create<AppState>()(
               statsDelta.maxXp = Math.floor(statsDelta.maxXp * 1.25); // Level scaling
               statsDelta.phoenixFreezes += 1; // Reward a freeze on level up
             }
+
+            // Stacking Logic: Check for linked triggers
+            if (habit.triggerHabitId) {
+              const linkedHabit = state.habits.find(h => h.id === habit.triggerHabitId);
+              if (linkedHabit && !linkedHabit.completions.includes(date)) {
+                softNudgeCallback = () => {
+                  console.log(`[Soft Nudge] Don't break the chain! Time for: ${linkedHabit.title}`);
+                  // In a production app, this connects to UI elements like Toast/Alert components.
+                };
+              }
+            }
           }
 
           return { habits: newHabits, stats: statsDelta };
         });
         get().checkAchievements();
+        return softNudgeCallback;
       },
 
       repairStreak: (habitId, missingDate) => {

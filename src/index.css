@@ -1,25 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  
-  --color-focus-bg: #FDFCF8;
-  --color-focus-surface: #FFFFFF;
-  --color-focus-border: #E5E2D9;
-  --color-focus-text: #3D403A;
-  --color-focus-dim: #8C8A82;
-  --color-focus-accent: #4F6D44;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --color-rpg-bg: #F2F0E9;
-  --color-rpg-surface: #FDFCF8;
-  --color-rpg-border: #E5E2D9;
-  --color-rpg-primary: #4F6D44;
-  --color-rpg-secondary: #D4A373;
-  --color-rpg-success: #ADC178;
-  --color-rpg-warning: #A98467;
-  --color-rpg-text: #2D302C;
+  /* Focus OS Palette (Light) */
+  --color-focus-bg: #F5F5F7;
+  --color-focus-surface: #FFFFFF;
+  --color-focus-border: #E5E5EA;
+  --color-focus-text: #1C1C1E;
+  --color-focus-dim: #8E8E93;
+
+  /* Focus OS Palette (OLED Midnight) */
+  --color-midnight-bg: #000000;
+  --color-midnight-surface: #1C1C1E;
+  --color-midnight-border: #38383A;
+  --color-midnight-text: #F5F5F7;
+  --color-midnight-dim: #98989D;
+
+  /* Identity Pillars */
+  /* Health / Vitality (Emerald) */
+  --color-pillar-health: #10B981;
+  --color-pillar-health-dark: #059669;
+  /* Work / Intellect (Azure) */
+  --color-pillar-work: #3B82F6;
+  --color-pillar-work-dark: #2563EB;
+  /* Mind / Focus (Amethyst) */
+  --color-pillar-mind: #8B5CF6;
+  --color-pillar-mind-dark: #6D28D9;
+
+  /* RPG Theme */
+  --color-rpg-bg: #1A202C;
+  --color-rpg-surface: #2D3748;
+  --color-rpg-border: #4A5568;
+  --color-rpg-text: #E2E8F0;
+}
+
+@layer utilities {
+  .glass-light {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+  .glass-dark {
+    @apply bg-midnight-surface/70 backdrop-blur-md border border-white/10;
+  }
 }
 
 body {
@@ -34,26 +57,26 @@ body {
 
 /* Midnight Theme overrides */
 body.theme-midnight {
-  background-color: #121212 !important;
-  color: #E0E0E0 !important;
+  background-color: var(--color-midnight-bg) !important;
+  color: var(--color-midnight-text) !important;
 }
 
 body.theme-midnight .bg-focus-surface, body.theme-midnight .bg-rpg-surface {
-  background-color: #1E1E1E !important;
-  border-color: #333333 !important;
-  color: #E0E0E0 !important;
+  background-color: var(--color-midnight-surface) !important;
+  border-color: var(--color-midnight-border) !important;
+  color: var(--color-midnight-text) !important;
 }
 
-body.theme-midnight .text-focus-text, body.theme-midnight .text-rpg-text {
-  color: #FDFCF8 !important;
+body.theme-midnight .text-focus-text, body.theme-midnight .text-rpg-text, body.theme-midnight .text-focus-dim {
+  color: var(--color-midnight-text) !important;
 }
 
 body.theme-midnight .bg-\[\#FDFCF8\] {
-  background-color: #2C2C2C !important;
+  background-color: var(--color-midnight-surface) !important;
 }
 
 body.theme-midnight .border-focus-border, body.theme-midnight .border-rpg-border {
-  border-color: #333333 !important;
+  border-color: var(--color-midnight-border) !important;
 }
 
 /* Base custom utilities */
