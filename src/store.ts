@@ -181,12 +181,23 @@ export const useAppStore = create<AppState>()(
           const existingCompletion = habit.completions.find(c => c.date === date);
 
           if (existingCompletion) {
-            // Remove completion
+            // Remove completion and deduct rewards (Anti-farming logic)
             const updatedHabits = state.habits.map(h => 
               h.id === id ? { ...h, completions: h.completions.filter(c => c.date !== date) } : h
             );
-            console.log(`[toggleHabitCompletion] REMOVING completion for ${date}. New count: ${updatedHabits.find(h => h.id === id)?.completions.length}`);
-            return { habits: updatedHabits };
+            
+            const statsDelta = { ...state.stats };
+            const xpReduction = habit.baseXp + Math.floor(statsDelta.level * 1.5);
+            
+            statsDelta.xp = Math.max(0, statsDelta.xp - xpReduction);
+            statsDelta.gold = Math.max(0, statsDelta.gold - Math.floor(xpReduction / 2));
+            statsDelta.resources = { 
+              ...statsDelta.resources, 
+              [habit.resourceReward]: Math.max(0, statsDelta.resources[habit.resourceReward] - 1) 
+            };
+
+            console.log(`[toggleHabitCompletion] REMOVING completion for ${date}. Deducting ${xpReduction} XP.`);
+            return { habits: updatedHabits, stats: statsDelta };
           }
 
           // Add completion with explicit 'completed' status
