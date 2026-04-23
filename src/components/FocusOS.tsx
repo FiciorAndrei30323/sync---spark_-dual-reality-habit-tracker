@@ -67,7 +67,7 @@ export default function FocusOS() {
   };
 
   const handleComplete = (id: string, e: React.MouseEvent) => {
-    const isCompleted = habits.find(h => h.id === id)?.completions.includes(today);
+    const isCompleted = habits.find(h => h.id === id)?.completions.some(c => c.date === today);
     toggleHabitCompletion(id, today);
     
     if (!isCompleted) {
@@ -89,14 +89,14 @@ export default function FocusOS() {
     }
   };
 
-  const todayHabits = habits.filter(h => !h.completions.includes(today));
-  const completedHabits = habits.filter(h => h.completions.includes(today));
+  const todayHabits = habits.filter(h => !h.completions.some(c => c.date === today));
+  const completedHabits = habits.filter(h => h.completions.some(c => c.date === today));
 
   const routines = [
-    { type: 'morning', icon: <Sun className="w-5 h-5 text-[#D4A373]" />, label: 'Morning Ritual' },
-    { type: 'afternoon', icon: <Clock className="w-5 h-5 text-[#8C8A82]" />, label: 'Afternoon Focus' },
-    { type: 'evening', icon: <Moon className="w-5 h-5 text-[#4F6D44]" />, label: 'Evening Wind-down' },
-    { type: 'anytime', icon: <Plus className="w-5 h-5 text-[#ADC178]" />, label: 'Anytime' }
+    { type: 'morning', icon: <Sun className="w-5 h-5 text-pillar-work" />, label: 'Morning Ritual' },
+    { type: 'afternoon', icon: <Clock className="w-5 h-5 text-text-secondary" />, label: 'Afternoon Focus' },
+    { type: 'evening', icon: <Moon className="w-5 h-5 text-pillar-mind" />, label: 'Evening Wind-down' },
+    { type: 'anytime', icon: <Plus className="w-5 h-5 text-pillar-health" />, label: 'Anytime' }
   ];
 
   const formatTime = (seconds: number) => {
@@ -106,26 +106,26 @@ export default function FocusOS() {
   };
 
   return (
-    <div className="p-6 md:p-12 w-full max-w-2xl mx-auto min-h-screen flex flex-col pt-12 pb-32 gap-10">
+    <div className="p-6 md:p-12 w-full max-w-2xl mx-auto min-h-screen flex flex-col pt-12 safe-area-bottom gap-10">
       
       {/* Header & Date */}
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-4xl font-serif italic text-focus-text tracking-tight">Focus.</h1>
-          <p className="text-focus-dim font-medium text-sm mt-1">{format(new Date(), 'EEEE, MMMM do')}</p>
+          <h1 className="text-4xl font-serif italic text-text-primary tracking-tight">Focus.</h1>
+          <p className="text-text-secondary font-medium text-sm mt-1">{format(new Date(), 'EEEE, MMMM do')}</p>
         </div>
         
         {/* Deep Focus Timer UI */}
-        <div className="flex items-center gap-3 bg-white border border-[#E5E2D9] px-4 py-2 rounded-[24px] shadow-sm">
-          <div className="font-mono text-xl text-focus-text font-bold w-[60px] text-center">
+        <div className="flex items-center gap-3 bg-surface-primary border border-border-subtle px-4 py-2 rounded-[24px] shadow-sm">
+          <div className="font-mono text-xl text-text-primary font-bold w-[60px] text-center">
             {formatTime(timeLeft)}
           </div>
-          <div className="w-[1px] h-6 bg-[#E5E2D9]"></div>
-          <button onClick={toggleTimer} className="text-focus-accent hover:opacity-80 transition-opacity p-1">
+          <div className="w-[1px] h-6 bg-border-subtle"></div>
+          <button onClick={toggleTimer} className="text-accent hover:opacity-80 transition-opacity p-1">
             {isTimerRunning ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
           </button>
           {!isTimerRunning && timeLeft < 25*60 && (
-            <button onClick={resetTimer} className="text-[#8C8A82] hover:opacity-80 p-1">
+            <button onClick={resetTimer} className="text-text-secondary hover:opacity-80 p-1">
               <RotateCcw className="w-4 h-4" />
             </button>
           )}
@@ -141,7 +141,7 @@ export default function FocusOS() {
             <div key={routine.type} className="space-y-4">
               <div className="flex items-center gap-2">
                 {routine.icon}
-                <h3 className="font-serif text-lg text-focus-text italic">{routine.label}</h3>
+                <h3 className="font-serif text-lg text-text-primary italic">{routine.label}</h3>
               </div>
               <AnimatePresence mode="popLayout">
                 {acts.map(habit => (
@@ -153,14 +153,14 @@ export default function FocusOS() {
                     transition={springTransition}
                     key={habit.id}
                     onClick={(e) => handleComplete(habit.id, e)}
-                    className="w-full group text-left bg-focus-surface border border-focus-border p-5 rounded-3xl flex items-center justify-between hover:border-focus-accent transition-all shadow-sm"
+                    className="w-full group text-left bg-surface-primary border border-border-subtle p-5 rounded-3xl flex items-center justify-between hover:border-accent transition-all shadow-sm"
                   >
-                    <span className="text-lg font-medium text-focus-text truncate px-2">{habit.title}</span>
-                    <div className="w-8 h-8 rounded-full border-2 border-focus-border group-hover:border-focus-accent transition-colors flex items-center justify-center relative overflow-hidden">
+                    <span className="text-lg font-medium text-text-primary truncate px-2">{habit.title}</span>
+                    <div className="w-8 h-8 rounded-full border-2 border-border-subtle group-hover:border-accent transition-colors flex items-center justify-center relative overflow-hidden">
                       <motion.div 
                          initial={{ scale: 0 }}
                          whileHover={{ scale: 1 }}
-                         className="absolute inset-0 bg-focus-accent/20 rounded-full"
+                         className="absolute inset-0 bg-accent/20 rounded-full"
                       />
                     </div>
                   </motion.button>
@@ -171,15 +171,15 @@ export default function FocusOS() {
         })}
 
         {todayHabits.length === 0 && (
-          <motion.div layout className="text-center py-12 text-focus-dim font-serif italic text-lg">
+          <motion.div layout className="text-center py-12 text-text-secondary font-serif italic text-lg">
             All intentions fulfilled. Your mind is clear.
           </motion.div>
         )}
       </div>
 
       {completedHabits.length > 0 && (
-        <div className="space-y-3 mt-4 pt-10 border-t border-[#E5E2D9]/50">
-          <h3 className="text-[10px] uppercase tracking-[0.2em] text-[#8C8A82] font-bold mb-4">Completed</h3>
+        <div className="space-y-3 mt-4 pt-10 border-t border-border-subtle/50">
+          <h3 className="text-[10px] uppercase tracking-[0.2em] text-text-secondary font-bold mb-4">Completed</h3>
           <AnimatePresence mode="popLayout">
             {completedHabits.map(habit => (
               <motion.button
@@ -192,8 +192,8 @@ export default function FocusOS() {
                 onClick={(e) => handleComplete(habit.id, e)}
                 className="w-full text-left bg-transparent p-4 rounded-2xl flex items-center justify-between overflow-hidden"
               >
-                <span className="text-md font-medium text-focus-dim line-through">{habit.title}</span>
-                <div className="w-6 h-6 bg-focus-accent rounded-full flex items-center justify-center overflow-hidden">
+                <span className="text-md font-medium text-text-secondary line-through">{habit.title}</span>
+                <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center overflow-hidden">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 15 }}>
                     <Check className="w-4 h-4 text-white" />
                   </motion.div>
@@ -221,9 +221,9 @@ export default function FocusOS() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="e.g. 'Morning run' or 'Read 20 pages'"
-              className="w-full bg-white border border-focus-border text-focus-text p-6 rounded-[32px] shadow-sm outline-none focus:border-focus-accent transition-colors pr-16 font-medium placeholder:text-focus-dim/50 text-lg"
+              className="w-full bg-surface-primary border border-border-subtle text-text-primary p-6 rounded-[32px] shadow-sm outline-none focus:border-accent transition-colors pr-16 font-medium placeholder:text-text-secondary/50 text-lg"
             />
-            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-focus-accent text-white rounded-2xl font-bold shadow-sm hover:scale-105 active:scale-95 transition-transform">
+            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-accent text-white rounded-2xl font-bold shadow-sm hover:scale-105 active:scale-95 transition-transform">
               <Plus className="w-6 h-6" />
             </button>
           </motion.form>
@@ -235,7 +235,7 @@ export default function FocusOS() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsAdding(true)}
-            className="mt-4 mx-auto w-14 h-14 flex items-center justify-center rounded-full bg-white border border-[#E5E2D9] text-focus-dim shadow-sm hover:text-focus-accent hover:border-focus-accent hover:scale-105 active:scale-95 transition-all"
+            className="mt-4 mx-auto w-14 h-14 flex items-center justify-center rounded-full bg-surface-primary border border-border-subtle text-text-secondary shadow-sm hover:text-accent hover:border-accent hover:scale-105 active:scale-95 transition-all"
           >
             <Plus className="w-6 h-6" />
           </motion.button>

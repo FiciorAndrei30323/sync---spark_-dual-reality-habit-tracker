@@ -4,12 +4,18 @@ import { format, differenceInDays } from 'date-fns';
 
 export type ResourceType = 'strength' | 'intelligence' | 'vitality' | 'focus';
 export type RoutineType = 'morning' | 'afternoon' | 'evening' | 'anytime';
+export type CompletionStatus = 'completed' | 'repaired';
+
+export interface Completion {
+  date: string; // YYYY-MM-DD
+  status: CompletionStatus;
+}
 
 export interface Habit {
   id: string;
   title: string;
   createdAt: string; // ISO date
-  completions: string[]; // Array of YYYY-MM-DD
+  completions: Completion[];
   resourceReward: ResourceType;
   baseXp: number;
   routine: RoutineType;
@@ -26,6 +32,7 @@ export interface UserStats {
   pomodorosCompleted: number;
   unlockedBadges: string[];
   activeTheme: 'natural' | 'midnight' | 'emerald';
+  vanguardRewardClaimed: boolean;
 }
 
 export interface GuildEvent {
@@ -65,6 +72,7 @@ interface AppState {
   updateGuildSettings: (settings: Partial<GuildSettings>) => void;
   addGuildEvent: (event: Omit<GuildEvent, 'id'>) => void;
   removeGuildEvent: (id: string) => void;
+  claimVanguardReward: () => void;
 }
 
 const INITIAL_STATS: UserStats = {
@@ -81,7 +89,8 @@ const INITIAL_STATS: UserStats = {
   },
   pomodorosCompleted: 0,
   unlockedBadges: ['first_seed'],
-  activeTheme: 'natural'
+  activeTheme: 'natural',
+  vanguardRewardClaimed: false
 };
 
 const INITIAL_HABITS: Habit[] = [
@@ -159,73 +168,104 @@ export const useAppStore = create<AppState>()(
       })),
 
       toggleHabitCompletion: (id, date) => {
-        let softNudgeCallback: (() => void) | void = undefined;
+        // BUG FIX: Nudge logic moved OUTSIDE set() to prevent stale closure interference
+        console.log(`[toggleHabitCompletion] ENTER — id: ${id}, date: ${date}`);
 
         set((state) => {
           const habit = state.habits.find(h => h.id === id);
-          if (!habit) return state;
-
-          const isCompleted = habit.completions.includes(date);
-          let newHabits = [...state.habits];
-          let statsDelta = { ...state.stats };
-
-          if (isCompleted) {
-            // Remove completion
-            newHabits = state.habits.map(h => 
-              h.id === id ? { ...h, completions: h.completions.filter(c => c !== date) } : h
-            );
-          } else {
-            // Add completion
-            newHabits = state.habits.map(h => 
-              h.id === id ? { ...h, completions: [...h.completions, date].sort() } : h
-            );
-            
-            // "Critical Hit Formula" simulation: higher level = slightly more XP
-            const xpGain = habit.baseXp + Math.floor(statsDelta.level * 1.5);
-            statsDelta.xp += xpGain;
-            statsDelta.gold += Math.floor(xpGain / 2);
-            statsDelta.resources[habit.resourceReward] += 1;
-
-            if (statsDelta.xp >= statsDelta.maxXp) {
-              statsDelta.xp = statsDelta.xp - statsDelta.maxXp;
-              statsDelta.level += 1;
-              statsDelta.maxXp = Math.floor(statsDelta.maxXp * 1.25); // Level scaling
-              statsDelta.phoenixFreezes += 1; // Reward a freeze on level up
-            }
-
-            // Stacking Logic: Check for linked triggers
-            if (habit.triggerHabitId) {
-              const linkedHabit = state.habits.find(h => h.id === habit.triggerHabitId);
-              if (linkedHabit && !linkedHabit.completions.includes(date)) {
-                softNudgeCallback = () => {
-                  console.log(`[Soft Nudge] Don't break the chain! Time for: ${linkedHabit.title}`);
-                  // In a production app, this connects to UI elements like Toast/Alert components.
-                };
-              }
-            }
+          if (!habit) {
+            console.warn(`[toggleHabitCompletion] Habit ${id} not found — aborting.`);
+            return {};  // FIX: return {} instead of state to avoid Zustand swallowing the call
           }
 
-          return { habits: newHabits, stats: statsDelta };
-        });
-        get().checkAchievements();
-        return softNudgeCallback;
-      },
+          const existingCompletion = habit.completions.find(c => c.date === date);
 
-      repairStreak: (habitId, missingDate) => {
-        set((state) => {
-          if (state.stats.phoenixFreezes <= 0) return state;
+          if (existingCompletion) {
+            // Remove completion
+            const updatedHabits = state.habits.map(h => 
+              h.id === id ? { ...h, completions: h.completions.filter(c => c.date !== date) } : h
+            );
+            console.log(`[toggleHabitCompletion] REMOVING completion for ${date}. New count: ${updatedHabits.find(h => h.id === id)?.completions.length}`);
+            return { habits: updatedHabits };
+          }
 
-          const newHabits = state.habits.map(h => 
-            h.id === habitId && (!h.completions.includes(missingDate)) 
-              ? { ...h, completions: [...h.completions, missingDate].sort() } 
+          // Add completion with explicit 'completed' status
+          const newCompletion: Completion = { date, status: 'completed' };
+          const updatedHabits = state.habits.map(h => 
+            h.id === id
+              ? { ...h, completions: [...h.completions, newCompletion].sort((a, b) => a.date.localeCompare(b.date)) }
               : h
           );
 
+          // "Critical Hit Formula" simulation: higher level = slightly more XP
+          const statsDelta = { ...state.stats };
+          const xpGain = habit.baseXp + Math.floor(statsDelta.level * 1.5);
+          statsDelta.xp += xpGain;
+          statsDelta.gold += Math.floor(xpGain / 2);
+          statsDelta.resources = { ...statsDelta.resources, [habit.resourceReward]: statsDelta.resources[habit.resourceReward] + 1 };
+
+          if (statsDelta.xp >= statsDelta.maxXp) {
+            statsDelta.xp = statsDelta.xp - statsDelta.maxXp;
+            statsDelta.level += 1;
+            statsDelta.maxXp = Math.floor(statsDelta.maxXp * 1.25);
+            statsDelta.phoenixFreezes += 1;
+          }
+
+          console.log(`[toggleHabitCompletion] ADDED completion for ${date}. New count: ${updatedHabits.find(h => h.id === id)?.completions.length}, XP: ${statsDelta.xp}`);
+          return { habits: updatedHabits, stats: statsDelta };
+        });
+
+        // Nudge logic: resolved AFTER set() completes, reading fresh state via get()
+        get().checkAchievements();
+
+        const freshState = get();
+        const habit = freshState.habits.find(h => h.id === id);
+        if (habit?.triggerHabitId) {
+          const linkedHabit = freshState.habits.find(h => h.id === habit.triggerHabitId);
+          if (linkedHabit && !linkedHabit.completions.find(c => c.date === date)) {
+            return () => {
+              console.log(`[Soft Nudge] Don't break the chain! Time for: ${linkedHabit.title}`);
+            };
+          }
+        }
+      },
+
+      repairStreak: (habitId, missingDate) => {
+        console.log(`[repairStreak] ENTER — habitId: ${habitId}, missingDate: ${missingDate}`);
+
+        set((state) => {
+          if (state.stats.phoenixFreezes <= 0) {
+            console.warn(`[repairStreak] No Phoenix charges remaining (${state.stats.phoenixFreezes}).`);
+            return {};  // FIX: return {} not state
+          }
+
+          const habit = state.habits.find(h => h.id === habitId);
+          if (!habit) {
+            console.warn(`[repairStreak] Habit ${habitId} not found.`);
+            return {};  // FIX: return {} not state
+          }
+
+          const alreadyExists = habit.completions.find(c => c.date === missingDate);
+          if (alreadyExists) {
+            console.warn(`[repairStreak] Date ${missingDate} already has a completion entry.`);
+            return {};  // FIX: return {} not state
+          }
+
+          const repairedCompletion: Completion = { date: missingDate, status: 'repaired' };
+          const updatedHabits = state.habits.map(h =>
+            h.id === habitId
+              ? { ...h, completions: [...h.completions, repairedCompletion].sort((a, b) => a.date.localeCompare(b.date)) }
+              : h
+          );
+
+          const newFreezes = state.stats.phoenixFreezes - 1;
+          console.log(`[repairStreak] SUCCESS — Repaired ${missingDate}. Charges remaining: ${newFreezes}. Completions: ${updatedHabits.find(h => h.id === habitId)?.completions.length}`);
+
           return {
-            habits: newHabits,
+            habits: updatedHabits,
             stats: {
               ...state.stats,
-              phoenixFreezes: state.stats.phoenixFreezes - 1
+              phoenixFreezes: newFreezes
             }
           };
         });
@@ -240,6 +280,7 @@ export const useAppStore = create<AppState>()(
             statsDelta.level += 1;
             statsDelta.maxXp = Math.floor(statsDelta.maxXp * 1.25);
           }
+          statsDelta.gold += Math.floor(amount / 2);
           return { stats: statsDelta };
         });
         get().checkAchievements();
@@ -271,8 +312,7 @@ export const useAppStore = create<AppState>()(
       buyTheme: (theme, cost) => set((state) => {
         if (state.stats.gold >= cost) {
           return {
-            stats: { ...state.stats, gold: state.stats.gold - cost },
-            activeTheme: theme // Instantly equip
+            stats: { ...state.stats, gold: state.stats.gold - cost, activeTheme: theme },
           };
         }
         return state;
@@ -303,20 +343,33 @@ export const useAppStore = create<AppState>()(
         }
       })),
 
-      buyPhoenixCharge: () => set((state) => {
-        const cost = 50;
-        if (state.stats.gold >= cost) {
-          return {
-            stats: {
-              ...state.stats,
-              gold: state.stats.gold - cost,
-              phoenixFreezes: state.stats.phoenixFreezes + 1
-            }
-          };
-        }
-        return state;
-      })
-    }),
+        buyPhoenixCharge: () => set((state) => {
+          const cost = 50;
+          if (state.stats.gold >= cost) {
+            return {
+              stats: {
+                ...state.stats,
+                gold: state.stats.gold - cost,
+                phoenixFreezes: state.stats.phoenixFreezes + 1
+              }
+            };
+          }
+          return state;
+        }),
+
+        claimVanguardReward: () => set((state) => {
+          if (!state.stats.vanguardRewardClaimed) {
+            return {
+              stats: {
+                ...state.stats,
+                phoenixFreezes: state.stats.phoenixFreezes + 1,
+                vanguardRewardClaimed: true
+              }
+            };
+          }
+          return state;
+        })
+      }),
     {
       name: 'sync-spark-storage',
     }

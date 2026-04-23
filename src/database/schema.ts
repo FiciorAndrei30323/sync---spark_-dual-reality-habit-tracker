@@ -81,7 +81,7 @@ export const schema = appSchema({
       columns: [
         { name: 'habit_id', type: 'string', isIndexed: true },
         { name: 'date', type: 'string' }, // YYYY-MM-DD
-        { name: 'status', type: 'string' }, // completed, skipped, failed, neutral
+        { name: 'status', type: 'string' }, // completed, skipped, failed, neutral, repaired
         { name: 'xp_gained', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },

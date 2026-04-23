@@ -25,6 +25,13 @@ export enum LogStatus {
    * Action: Applies the chronotype-weighted decay penalty.
    */
   SKIPPED = 'skipped',
+
+  /**
+   * The day was restored via a Phoenix Root (streak repair).
+   * The user did NOT perform the habit, but invested a resource to forgive the gap.
+   * Action: Preserves streak continuity with zero XP gain. UI renders with unique "Phoenix" styling (gold border).
+   */
+  REPAIRED = 'repaired',
 }
 
 /**

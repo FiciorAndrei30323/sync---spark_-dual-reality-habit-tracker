@@ -4,36 +4,60 @@
 @theme {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  /* Focus OS Palette (Light) */
-  --color-focus-bg: #F5F5F7;
-  --color-focus-surface: #FFFFFF;
-  --color-focus-border: #E5E5EA;
-  --color-focus-text: #1C1C1E;
-  --color-focus-dim: #8E8E93;
+  /* Semantic Palette Base */
+  --color-bg-base: var(--bg-base);
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border-subtle: var(--border-subtle);
+  --color-accent: var(--accent);
+  --color-repaired: var(--repaired);
 
-  /* Focus OS Palette (OLED Midnight) */
-  --color-midnight-bg: #000000;
-  --color-midnight-surface: #1C1C1E;
-  --color-midnight-border: #38383A;
-  --color-midnight-text: #F5F5F7;
-  --color-midnight-dim: #98989D;
-
-  /* Identity Pillars */
-  /* Health / Vitality (Emerald) */
+  /* Identity Pillars — defaults, overridden at runtime by Dynamic Saturation engine */
   --color-pillar-health: #10B981;
   --color-pillar-health-dark: #059669;
-  /* Work / Intellect (Azure) */
   --color-pillar-work: #3B82F6;
   --color-pillar-work-dark: #2563EB;
-  /* Mind / Focus (Amethyst) */
   --color-pillar-mind: #8B5CF6;
   --color-pillar-mind-dark: #6D28D9;
+  --color-momentum-shield: #94A3B8;
+  --color-momentum-shield-light: #CBD5E1;
+}
 
-  /* RPG Theme */
-  --color-rpg-bg: #1A202C;
-  --color-rpg-surface: #2D3748;
-  --color-rpg-border: #4A5568;
-  --color-rpg-text: #E2E8F0;
+:root {
+  /* Default: Natural (Light) */
+  --bg-base: #F5F5F7;
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #E5E5EA;
+  --text-primary: #1C1C1E;
+  --text-secondary: #636366; /* WCAG AA Compliant (4.5:1+) */
+  --border-subtle: #D1D1D6;
+  --accent: #10B981;
+  --repaired: #94A3B8; /* Metallic Silver (Slate-400) */
+  --vibrancy-factor: 1;
+}
+
+.theme-midnight {
+  --bg-base: #000000;
+  --surface-primary: #1C1C1E;
+  --surface-secondary: #2C2C2E;
+  --text-primary: #F5F5F7;
+  --text-secondary: #98989D;
+  --border-subtle: #38383A;
+  --accent: #10B981;
+  --repaired: #E2E8F0; /* Bright Chrome for Dark Theme contrast */
+}
+
+.theme-emerald {
+  --bg-base: #064E3B;
+  --surface-primary: #065F46;
+  --surface-secondary: #047857;
+  --text-primary: #ECFDF5;
+  --text-secondary: #A7F3D0;
+  --border-subtle: #059669;
+  --accent: #34D399;
+  --repaired: #94A3B8; /* Polished Steel for Emerald theme */
 }
 
 @layer utilities {
@@ -41,54 +65,83 @@
     @apply bg-white/70 backdrop-blur-md border border-white/20;
   }
   .glass-dark {
-    @apply bg-midnight-surface/70 backdrop-blur-md border border-white/10;
+    @apply bg-black/40 backdrop-blur-md border border-white/10;
+  }
+  
+  /* Artifact Effects */
+  .artifact-locked {
+    @apply opacity-50 blur-[4px] grayscale pointer-events-none;
+  }
+  .artifact-unlocked {
+    @apply opacity-100 blur-none grayscale-0;
+  }
+  
+  /* Vibrancy Tiers */
+  .vibrancy-muted { --vibrancy-factor: 0.5; }
+  .vibrancy-normal { --vibrancy-factor: 1; }
+  .vibrancy-high { --vibrancy-factor: 1.5; }
+
+  /* Safe Area Padding */
+  .safe-area-bottom {
+    @apply pb-40; /* Increased to account for floating nav + some air */
   }
 }
 
 body {
-  @apply bg-focus-bg text-focus-text font-sans antialiased overflow-hidden;
-  transition: background-color 0.5s ease;
+  @apply bg-bg-base text-text-primary font-sans antialiased overflow-hidden;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-/* Base custom utilities */
-.rpg-mode {
-  @apply bg-rpg-bg text-rpg-text;
+/*
+ * Dynamic Saturation: All pillar-colored elements smoothly transition
+ * when the vibrancy factor changes (e.g., after a habit completion).
+ */
+[class*="pillar-"],
+[class*="accent"] {
+  transition: color 1.2s ease, background-color 1.2s ease, border-color 1.2s ease, box-shadow 1.2s ease;
 }
 
-/* Midnight Theme overrides */
-body.theme-midnight {
-  background-color: var(--color-midnight-bg) !important;
-  color: var(--color-midnight-text) !important;
+/* Animations */
+@keyframes rebirth-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(234, 179, 8, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
 }
 
-body.theme-midnight .bg-focus-surface, body.theme-midnight .bg-rpg-surface {
-  background-color: var(--color-midnight-surface) !important;
-  border-color: var(--color-midnight-border) !important;
-  color: var(--color-midnight-text) !important;
+.animate-rebirth {
+  animation: rebirth-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
 }
 
-body.theme-midnight .text-focus-text, body.theme-midnight .text-rpg-text, body.theme-midnight .text-focus-dim {
-  color: var(--color-midnight-text) !important;
+@keyframes gleam {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  20%, 100% { transform: translateX(200%) skewX(-15deg); }
 }
 
-body.theme-midnight .bg-\[\#FDFCF8\] {
-  background-color: var(--color-midnight-surface) !important;
+.animate-gleam {
+  position: relative;
+  overflow: hidden;
 }
 
-body.theme-midnight .border-focus-border, body.theme-midnight .border-rpg-border {
-  border-color: var(--color-midnight-border) !important;
+.animate-gleam::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: gleam 3s infinite;
 }
 
-/* Base custom utilities */
 ::-webkit-scrollbar {
   display: none;
 }
 * {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-@keyframes shine {
-  0% { transform: translateX(-100%) skewX(-15deg); }
-  20%, 100% { transform: translateX(200%) skewX(-15deg); }
 }

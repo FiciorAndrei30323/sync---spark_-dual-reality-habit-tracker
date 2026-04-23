@@ -49,20 +49,20 @@ export default function MetaBlock({ isVisible, anchorHabitName, chainedHabitName
             />
 
             <div className="p-4 relative z-10 flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-xs font-medium text-focus-dim dark:text-midnight-dim uppercase tracking-wider">
-                <CheckCircle2 className="w-3 h-3 text-[#10B981]" />
+              <div className="flex items-center gap-2 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                <CheckCircle2 className="w-3 h-3 text-pillar-health" />
                 <span>{anchorHabitName} Logged. Next up:</span>
               </div>
               
               <div className="flex items-center justify-between">
-                <h4 className="text-focus-text dark:text-midnight-text font-semibold text-lg">
+                <h4 className="text-text-primary font-semibold text-lg">
                   {chainedHabitName}
                 </h4>
               </div>
 
               {/* Swipe-to-log area */}
-              <div className="relative h-12 bg-black/5 dark:bg-white/5 rounded-xl overflow-hidden flex items-center justify-center mt-2">
-                <div className="absolute inset-x-0 flex items-center justify-center opacity-40 text-sm font-medium text-focus-text dark:text-midnight-text">
+              <div className="relative h-12 bg-surface-secondary/50 rounded-xl overflow-hidden flex items-center justify-center mt-2">
+                <div className="absolute inset-x-0 flex items-center justify-center opacity-40 text-sm font-medium text-text-primary">
                   Swipe to complete <ChevronRight className="w-4 h-4 ml-1" />
                 </div>
                 
@@ -72,13 +72,13 @@ export default function MetaBlock({ isVisible, anchorHabitName, chainedHabitName
                   dragElastic={{ left: 0, right: 0.8 }}
                   onDragEnd={handleDragEnd}
                   animate={controls}
-                  className="absolute left-1 h-10 w-10 bg-white dark:bg-[#2C2C2E] shadow-sm rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing z-10 border border-black/5 dark:border-white/10"
+                  className="absolute left-1 h-10 w-10 bg-surface-primary shadow-sm rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing z-10 border border-border-subtle"
                 >
-                  <ChevronRight className="w-5 h-5 text-focus-text dark:text-midnight-text" />
+                  <ChevronRight className="w-5 h-5 text-text-primary" />
                 </motion.div>
                 
                 <motion.div 
-                  className="absolute left-0 top-0 bottom-0 bg-[#3B82F6]/20 origin-left"
+                  className="absolute left-0 top-0 bottom-0 bg-pillar-work/20 origin-left"
                   style={{ width: '100%' }}
                   initial={{ scaleX: 0 }}
                   whileDrag={{ scaleX: 1, transition: { duration: 0.1 } }}
@@ -88,7 +88,7 @@ export default function MetaBlock({ isVisible, anchorHabitName, chainedHabitName
             
             <button 
               onClick={onDismiss}
-              className="absolute top-3 right-3 text-focus-dim hover:text-focus-text transition-colors"
+              className="absolute top-3 right-3 text-text-secondary hover:text-text-primary transition-colors"
             >
               Skip
             </button>
